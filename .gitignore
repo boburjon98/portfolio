@@ -1,0 +1,19 @@
+node_modules/
+.next/
+.next-review/
+.browser-review/
+.review/
+out/
+.env.local
+.DS_Store
+*.tsbuildinfo
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+
+!.env.example
