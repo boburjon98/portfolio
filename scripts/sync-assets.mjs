@@ -6,7 +6,7 @@ const read=name=>readFileSync(resolve(base,name),'utf8');
 const write=(name,value)=>writeFileSync(resolve(base,name),value,'utf8');
 const cssMarker='/* Animated AI workspace */';
 const jsMarker='/* Decorative effects respect motion preferences';
-const css=read('site.css').split(cssMarker)[0].trimEnd()+'\n'+read('effects.css')+'\n'+read('presentation.css')+'\n'+read('project-effects.css');
+const css=read('site.css').split(cssMarker)[0].trimEnd()+'\n'+read('effects.css')+'\n'+read('presentation.css')+'\n'+read('project-effects.css')+'\n'+read('tag-info.css');
 let coreJs=read('site.js').split(jsMarker)[0].replace(/\n  \/\* Additional projects:start \*\/[\s\S]*?\/\* Additional projects:end \*\/\n/g,'\n').trimEnd();
 const projects=JSON.parse(read('lib/additionalProjects.json'));
 const categories={en:{filterDocuments:'Documents',filterSearch:'Search & Chatbots',filterAnalytics:'Analytics'},uz:{filterDocuments:'Hujjatlar',filterSearch:'Qidiruv va chatbotlar',filterAnalytics:'Tahlil'},ru:{filterDocuments:'Документы',filterSearch:'Поиск и чатботы',filterAnalytics:'Аналитика'}};
@@ -21,10 +21,11 @@ for(const lang of ['en','uz','ru']){
 for(const p of projects){const details={tags:p.tags,url:null};for(const lang of ['en','uz','ru'])details[lang]={...p[lang],category:p.category.toUpperCase(),link:''};extra+='  projectDetails['+JSON.stringify(p.id)+']='+JSON.stringify(details)+';\n';}
 extra+='  /* Additional projects:end */\n';
 coreJs=coreJs.replace('  const translationEls =',extra+'  const translationEls =');
-const js=coreJs+'\n'+read('effects.js')+'\n'+read('presentation.js')+'\n'+read('project-effects.js');
+const js=coreJs+'\n'+read('effects.js')+'\n'+read('presentation.js')+'\n'+read('project-effects.js')+'\n'+read('tag-info.js').replace('/* GLOSSARY_DATA */{}',JSON.stringify(JSON.parse(read('lib/glossary.json'))));
 write('site.css',css);write('site.js',js);
 write('public/site.css',css);write('app/globals.css',css);write('public/site.js',js);
 let markup=read('_markup.html').replaceAll('bobur-tukhtamurov-601a45315','bobur-tukhtamurodov-601a45315');
+markup=markup.replace(/<div class="language-picker"[^>]*>[\s\S]*?<\/div>/,'<div class="language-picker"><select class="language-select" aria-label="Choose language"><option value="en">English</option><option value="uz">O‘zbekcha</option><option value="ru">Русский</option></select></div>');
 markup=markup.replace(/<!-- Additional projects:start -->[\s\S]*?<!-- Additional projects:end -->/g,'').replace(/<!-- Additional filters:start -->[\s\S]*?<!-- Additional filters:end -->/g,'');
 const filters='<!-- Additional filters:start -->'+Object.entries(categories.en).map(([key,label])=>`<button class="filter-chip" data-filter="${key.replace('filter','').toLowerCase()}" aria-pressed="false" data-i18n="${key}">${label}</button>`).join('')+'<!-- Additional filters:end -->';
 markup=markup.replace('</div>\n      <div class="projects-grid">',filters+'</div>\n      <div class="projects-grid">').replace('All projects <span>04</span>','All projects <span>11</span>');

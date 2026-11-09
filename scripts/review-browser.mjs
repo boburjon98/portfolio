@@ -19,6 +19,10 @@ try{
  for(const [name,width,height]of [['desktop',1440,1080],['mobile',390,844]]){
   await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:name==='mobile'});
   await send('Page.navigate',{url:pathToFileURL(resolve('index.html')).href});await delay(1200);
+  assert.equal(await evaluate(`document.querySelectorAll('.language-select option').length`),3);
+  for(const lang of ['uz','ru','en']){await evaluate(`(()=>{const s=document.querySelector('.language-select');s.value='${lang}';s.dispatchEvent(new Event('change',{bubbles:true}));})()`);await delay(80);assert.equal(await evaluate(`document.documentElement.lang`),lang);}
+  await evaluate(`document.querySelector('.project-card .tags [data-tech="LLM"]').click()`);assert.equal(await evaluate(`document.querySelector('.tag-dialog').open`),true);assert.equal(await evaluate(`document.querySelector('.tag-full-name').textContent`),'Large Language Model');assert.equal(await evaluate(`document.querySelector('.modal-backdrop').hidden`),true);await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape'});await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape'});assert.equal(await evaluate(`document.querySelector('.tag-dialog').open`),false);
+  await evaluate(`document.querySelector('.project-card .project-open').click()`);await delay(60);assert.equal(await evaluate(`document.querySelector('.modal-backdrop').hidden`),false);await evaluate(`document.querySelector('.modal-tags [data-tech="LLM"]').click()`);assert.equal(await evaluate(`document.querySelector('.tag-dialog').open`),true);await evaluate(`document.querySelector('.tag-dialog-done').click()`);assert.equal(await evaluate(`document.querySelector('.modal-backdrop').hidden`),false);await evaluate(`document.querySelector('.modal-close').click()`);
   await evaluate(`document.documentElement.style.scrollBehavior='auto';window.scrollTo({top:document.querySelector('#work').getBoundingClientRect().top+window.scrollY-100,behavior:'instant'});`);await delay(900);
   await evaluate(`Promise.all([...document.querySelectorAll('.project-cover')].map(image=>{image.loading='eager';return image.decode().catch(()=>{})}))`);
   const metrics=await evaluate(`JSON.stringify({headerTop:document.querySelector('.header').getBoundingClientRect().top,topVisible:!document.querySelector('.scroll-top').hidden,topRight:document.querySelector('.scroll-top').getBoundingClientRect().right,viewport:window.innerWidth,documentWidth:document.documentElement.scrollWidth,covers:document.querySelectorAll('.project-cover').length,loaded:[...document.querySelectorAll('.project-cover')].filter(image=>image.naturalWidth>0).length,projects:document.querySelectorAll('.project-card').length})`);
@@ -34,6 +38,6 @@ try{
   const screenshot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});writeFileSync(`.review/projects-${name}.png`,Buffer.from(screenshot.data,'base64'));
   await evaluate(`document.querySelector('.scroll-top').click()`);await delay(1000);assert.equal(await evaluate(`window.scrollY`),0);
  }
- console.log('PASS: desktop/mobile fixed header, compact header, scroll progress ring, hover reset, reduced motion, 11 loaded covers and no horizontal overflow.');
+ console.log('PASS: desktop/mobile dropdown languages, LLM descriptions, Escape, nested dialogs, fixed header, scroll effects, images and no horizontal overflow.');
  await send('Browser.close');
 }finally{socket?.close();chrome.kill();}

@@ -1,0 +1,20 @@
+(function(){
+ 'use strict';
+ const root=document.getElementById('site-root');if(!root)return;
+ const glossary=/* GLOSSARY_DATA */{};
+ const aliases={'CV':'Computer Vision','Local-first AI':'Local AI','Multimodal systems':'Multimodal AI','Production engineering':'Application Development','AI & Machine Learning':'AI','AI va Machine Learning':'AI','AI и машинное обучение':'AI','Software Development':'Application Development','Dasturiy ta’minot':'Application Development','Разработка ПО':'Application Development','NVIDIA GPU Infrastructure':'GPU','NVIDIA GPU infratuzilmasi':'GPU','GPU-инфраструктура NVIDIA':'GPU'};
+ const dialog=document.createElement('dialog');dialog.className='tag-dialog';dialog.setAttribute('aria-labelledby','tag-info-title');dialog.innerHTML='<button type="button" class="tag-dialog-close" aria-label="Close">×</button><div class="overline" id="tag-info-label"></div><h2 id="tag-info-title"></h2><p class="tag-full-name"></p><p class="tag-info-description"></p><button type="button" class="button button-primary tag-dialog-done"></button>';root.append(dialog);
+ let source=null;
+ const labels={en:['TECHNOLOGY EXPLAINED','Close'],uz:['TEXNOLOGIYA HAQIDA','Yopish'],ru:['О ТЕХНОЛОГИИ','Закрыть']};
+ function close(){dialog.close();}
+ dialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close();}});
+ dialog.querySelector('.tag-dialog-close').addEventListener('click',close);dialog.querySelector('.tag-dialog-done').addEventListener('click',close);
+ dialog.addEventListener('click',event=>{const r=dialog.getBoundingClientRect();if(event.target===dialog&&(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom))close();});
+ dialog.addEventListener('close',()=>{if(!root.querySelector('.modal-backdrop:not([hidden])'))document.body.classList.remove('modal-open');source?.focus();});
+ function entry(key){if(glossary[key])return glossary[key];if(/^(RTX |H200$|B200$)/.test(key))return ['NVIDIA '+key,'NVIDIA GPU hardware used for accelerated AI computation and inference.','AI hisoblashlari va inferensni tezlashtirishda ishlatiladigan NVIDIA GPU qurilmasi.','GPU NVIDIA для ускоренных AI-вычислений и инференса.'];return null;}
+ function open(button){const key=button.dataset.tech;const info=entry(key);if(!info)return;source=button;const lang=document.documentElement.lang||'en',index=({en:1,uz:2,ru:3})[lang]||1;const text=labels[lang]||labels.en;dialog.querySelector('#tag-info-label').textContent=text[0];dialog.querySelector('#tag-info-title').textContent=key;dialog.querySelector('.tag-full-name').textContent=info[0];dialog.querySelector('.tag-info-description').textContent=info[index];dialog.querySelector('.tag-dialog-done').textContent=text[1];dialog.querySelector('.tag-dialog-close').setAttribute('aria-label',text[1]);dialog.showModal();document.body.classList.add('modal-open');dialog.querySelector('.tag-dialog-close').focus();}
+ function prepare(){root.querySelectorAll('.tags>span,.skill-tags>span,.stack-chips>span,.modal-tags>span,.hero-pills>span,.floating-tech,.gpu-chip strong').forEach(tag=>{if(tag.dataset.tech)return;const raw=tag.textContent.trim().replace(/^(<\/>|✦|⌘)\s*/,''),key=aliases[raw]||raw;if(!entry(key))return;tag.dataset.tech=key;tag.setAttribute('role','button');tag.setAttribute('tabindex','0');tag.setAttribute('aria-haspopup','dialog');tag.classList.add('technology-tag');tag.removeAttribute('aria-hidden');if(tag.parentElement?.classList.contains('gpu-chip'))tag.parentElement.removeAttribute('aria-hidden');});}
+ root.addEventListener('click',event=>{const button=event.target.closest('[data-tech]');if(!button)return;event.preventDefault();event.stopPropagation();open(button);},true);
+ root.addEventListener('keydown',event=>{const button=event.target.closest('[data-tech]');if(!button||!['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();open(button);},true);
+ new MutationObserver(prepare).observe(root,{childList:true,subtree:true});prepare();
+})();
